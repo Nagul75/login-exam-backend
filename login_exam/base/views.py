@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from .serializers import UserSerializer
 
 @csrf_exempt
 def signup(request):
@@ -50,7 +51,8 @@ def logout(request):
 
 @login_required
 def check_authentication(request):
-    return JsonResponse({'authenticated': True, 'username': request.user.username})
+    serializer = UserSerializer(request.user)
+    return JsonResponse({'authenticated': True, 'user': serializer.data})
 
 @csrf_exempt
 def not_authenticated(request):
