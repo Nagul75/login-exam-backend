@@ -4,6 +4,8 @@ from django.http import HttpResponse, JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 
 @csrf_exempt
 def signup(request):
@@ -23,11 +25,33 @@ def signup(request):
     return HttpResponse('signup')
 
 @csrf_exempt
-def login(request):
+def Login(request):
     if request.method == 'POST':
         print("IN LOGIN POST BODY")
         data = json.loads(request.body)
-        print("Received data:", data)
-        response_data = {'message' : 'Data received successfully!', 'receivedData': data}
-        return JsonResponse(response_data, status=200)
-    return HttpResponse('login')
+        username = data.get('username')
+        password = data.get('password')
+        print(username, password)
+        user = authenticate(request, username=username, password=password)
+        print("USEr",user)
+        if user is not None:
+            login(request, user)
+            response = JsonResponse({'message': 'login successful'}, status=200)
+            response.set_cookie('sessionid', request.session.session_key, httponly=True, samesite='Lax')
+            return response
+        else:
+            return JsonResponse({'message': 'Login failure'}, status=401)
+
+@csrf_exempt
+def logout(request):
+    logout(request)
+    JsonResponse({'message' : 'logout succesful'}, status=200)
+
+
+@login_required
+def check_authentication(request):
+    return JsonResponse({'authenticated': True, 'username': request.user.username})
+
+@csrf_exempt
+def not_authenticated(request):
+    return JsonResponse({'authenticated': False})
