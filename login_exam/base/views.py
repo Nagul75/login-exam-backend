@@ -26,7 +26,7 @@ def signup(request):
     return HttpResponse('signup')
 
 @csrf_exempt
-def Login(request):
+def user_login(request):
     if request.method == 'POST':
         print("IN LOGIN POST BODY")
         data = json.loads(request.body)
@@ -44,9 +44,9 @@ def Login(request):
             return JsonResponse({'message': 'Login failure'}, status=401)
 
 @csrf_exempt
-def logout(request):
+def user_logout(request):
     logout(request)
-    JsonResponse({'message' : 'logout succesful'}, status=200)
+    return JsonResponse({'message' : 'logout succesful'}, status=200)
 
 
 @login_required
