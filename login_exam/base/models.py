@@ -30,3 +30,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+class Pokemon(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    height = models.IntegerField(blank=True, null=True)
+    weight = models.IntegerField(blank=True, null=True)
+    image_url = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'pokemon'
