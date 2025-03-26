@@ -1,12 +1,21 @@
 from django.shortcuts import render
-from .models import User
+from .models import User, Pokemon
 from django.http import HttpResponse, JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .serializers import UserSerializer
+from .serializers import UserSerializer, PokemonSerializer
+
+
+@api_view(['GET'])
+def get_pokemon(request):
+    pokemon = Pokemon.objects.all()
+    serializer = PokemonSerializer(pokemon, many = True)
+    return Response(serializer.data)
 
 @csrf_exempt
 def signup(request):
@@ -34,7 +43,6 @@ def user_login(request):
         password = data.get('password')
         print(username, password)
         user = authenticate(request, username=username, password=password)
-        print("USEr",user)
         if user is not None:
             login(request, user)
             response = JsonResponse({'message': 'login successful'}, status=200)
@@ -45,8 +53,14 @@ def user_login(request):
 
 @csrf_exempt
 def user_logout(request):
-    logout(request)
-    return JsonResponse({'message' : 'logout succesful'}, status=200)
+    if request.user.is_authenticated:
+        logout(request)
+        response = JsonResponse({'message': 'Logout successful'})
+        response.delete_cookie('sessionid')
+        response.delete_cookie('csrftoken')
+        return response
+    else:
+        return JsonResponse({'message': 'User not authenticated'}, status=401)
 
 
 @login_required
