@@ -20,36 +20,49 @@ def get_pokemon(request):
 @csrf_exempt
 def signup(request):
     if request.method == 'POST':
-        print("IN POST BODY")
-        data = json.loads(request.body)
-        print('Received data:', data)
-        response_data = {'message': 'Data received successfully!', 'receivedData': data}
-        print("Adding user to database")
-        User.objects.create(
-            username= data.get('username'),
-            password = make_password(data.get('password')),
-            fullname = data.get('fullName'),
+        try:
+            print("IN POST BODY")
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            full_name = data.get('fullName')
             email = data.get('email')
-        )
-        return JsonResponse(response_data, status=200)
-    return HttpResponse('signup')
+
+            if User.objects.filter(username = username).exists():
+                return JsonResponse({'error': 'Username already exists!'}, status = 400)
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'error': 'Email already exists!'}, status=400)
+
+            User.objects.create(
+                username= data.get('username'),
+                password = make_password(data.get('password')),
+                fullname = data.get('fullName'),
+                email = data.get('email')
+            )
+            return JsonResponse({'message:': 'User registered successfully'}, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return HttpResponse('invalid request method', status=405)
 
 @csrf_exempt
 def user_login(request):
     if request.method == 'POST':
-        print("IN LOGIN POST BODY")
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        print(username, password)
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            response = JsonResponse({'message': 'login successful'}, status=200)
-            response.set_cookie('sessionid', request.session.session_key, httponly=True, samesite='Lax')
-            return response
-        else:
-            return JsonResponse({'message': 'Login failure'}, status=401)
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                response = JsonResponse({'message': 'login successful'}, status=200)
+                response.set_cookie('sessionid', request.session.session_key, httponly=True, samesite='Lax')
+                return response
+            else:
+                return JsonResponse({'error': 'Invalid username or password'}, status=401)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return HttpResponse('Invalid request method', status=405)
 
 @csrf_exempt
 def user_logout(request):
