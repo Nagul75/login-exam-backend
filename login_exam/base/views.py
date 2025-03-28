@@ -34,10 +34,10 @@ def signup(request):
                 return JsonResponse({'error': 'Email already exists!'}, status=400)
 
             User.objects.create(
-                username= data.get('username'),
-                password = make_password(data.get('password')),
-                fullname = data.get('fullName'),
-                email = data.get('email')
+                username= username,
+                password = make_password(password),
+                fullname = full_name,
+                email = email,
             )
             return JsonResponse({'message:': 'User registered successfully'}, status=201)
         except Exception as e:
